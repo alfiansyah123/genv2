@@ -55,7 +55,10 @@ app.get('/', (req, res) => {
 });
 
 // Initialize WebSocket for live traffic
-initWebSocket(server);
+// Initialize WebSocket for live traffic
+if (process.env.NODE_ENV !== 'production') {
+    initWebSocket(server);
+}
 
 // server.listen(port, () => {
 //     console.log(`Server is running at http://localhost:${port}`);
