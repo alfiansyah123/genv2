@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { API_URL } from '../config';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import GeneratorNavigation from '../components/GeneratorNavigation';
@@ -42,7 +43,7 @@ export default function ShareImage() {
     useEffect(() => {
         const fetchDomains = async () => {
             try {
-                const res = await fetch('http://localhost:3000/api/addon-domains');
+                const res = await fetch(`${API_URL}/api/addon-domains`);
                 if (res.ok) {
                     const data = await res.json();
                     setDomains(data);
@@ -82,14 +83,14 @@ export default function ShareImage() {
         formData.append('image', file);
 
         try {
-            const res = await fetch('http://localhost:3000/api/upload', {
+            const res = await fetch(`${API_URL}/api/upload`, {
                 method: 'POST',
                 body: formData
             });
             if (res.ok) {
                 const data = await res.json();
                 // Replace local preview with server URL
-                const serverUrl = `http://localhost:3000${data.imageUrl}`;
+                const serverUrl = `${data.imageUrl}`;
                 setSelectedImage(serverUrl);
             }
         } catch (err) {
@@ -124,7 +125,7 @@ export default function ShareImage() {
             const slug = generateSlug();
 
             // For library images, use them directly. For uploaded images, they should already be server URLs
-            const ogImageUrl = selectedImage.startsWith('http://localhost:3000')
+            const ogImageUrl = selectedImage.startsWith('')
                 ? selectedImage
                 : selectedImage; // External URLs work too for OG
 
@@ -139,7 +140,7 @@ export default function ShareImage() {
                 ogDescription: promoText
             };
 
-            const res = await fetch('http://localhost:3000/api/links', {
+            const res = await fetch(`${API_URL}/api/links`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

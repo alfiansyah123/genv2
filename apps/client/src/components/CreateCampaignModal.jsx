@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL } from '../config';
 
 // Network configurations with URL templates and postback endpoints
 const networkConfig = {
@@ -52,7 +53,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:3000/api/campaigns', {
+            const response = await fetch(`${API_URL}/api/campaigns`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

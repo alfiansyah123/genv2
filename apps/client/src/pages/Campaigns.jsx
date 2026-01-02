@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 import CreateCampaignModal from '../components/CreateCampaignModal';
 import { useTheme } from '../context/ThemeContext';
 
@@ -32,7 +33,7 @@ export default function Campaigns() {
     const fetchCampaigns = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:3000/api/campaigns');
+            const response = await fetch(`${API_URL}/api/campaigns`);
             if (response.ok) {
                 const data = await response.json();
                 setCampaigns(data);
@@ -55,7 +56,7 @@ export default function Campaigns() {
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this campaign?')) return;
         try {
-            const response = await fetch(`http://localhost:3000/api/campaigns/${id}`, {
+            const response = await fetch(`${API_URL}/api/campaigns/${id}`, {
                 method: 'DELETE'
             });
             if (response.ok) {

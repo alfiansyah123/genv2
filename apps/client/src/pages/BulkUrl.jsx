@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 import { useParams, Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import GeneratorNavigation from '../components/GeneratorNavigation';
@@ -25,7 +26,7 @@ export default function BulkUrl() {
         const fetchData = async () => {
             try {
                 // Fetch Domains
-                const domainsRes = await fetch('http://localhost:3000/api/addon-domains');
+                const domainsRes = await fetch('/api/addon-domains');
                 if (domainsRes.ok) {
                     const data = await domainsRes.json();
                     if (Array.isArray(data)) {
@@ -39,7 +40,7 @@ export default function BulkUrl() {
                 }
 
                 // Fetch Campaigns (for dynamic network list)
-                const campaignsRes = await fetch('http://localhost:3000/api/campaigns');
+                const campaignsRes = await fetch('/api/campaigns');
                 if (campaignsRes.ok) {
                     const data = await campaignsRes.json();
                     setCampaigns(data);
@@ -156,7 +157,7 @@ export default function BulkUrl() {
                     network: selectedNetwork
                 };
 
-                const response = await fetch('http://localhost:3000/api/links', {
+                const response = await fetch('/api/links', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)

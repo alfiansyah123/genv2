@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { API_URL } from '../config';
 
 const MAX_ITEMS = 5;
 
@@ -11,7 +12,10 @@ export default function LiveTraffic() {
 
     useEffect(() => {
         // Connect to WebSocket
-        const wsUrl = `ws://localhost:3000/ws/live-traffic`;
+        // Connect to WebSocket
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = API_URL.replace(/^https?:\/\//, '');
+        const wsUrl = `${protocol}//${host}/ws/live-traffic`;
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 

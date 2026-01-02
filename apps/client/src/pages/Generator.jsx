@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 import { useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { useTheme } from '../context/ThemeContext';
@@ -25,14 +26,14 @@ export default function Generator() {
         const fetchData = async () => {
             try {
                 // Fetch Campaigns
-                const campaignsRes = await fetch('http://localhost:3000/api/campaigns');
+                const campaignsRes = await fetch('/api/campaigns');
                 if (campaignsRes.ok) {
                     const data = await campaignsRes.json();
                     setCampaigns(data);
                 }
 
                 // Fetch Domains
-                const domainsRes = await fetch('http://localhost:3000/api/addon-domains');
+                const domainsRes = await fetch('/api/addon-domains');
                 if (domainsRes.ok) {
                     const data = await domainsRes.json();
                     if (Array.isArray(data)) {
@@ -126,7 +127,7 @@ export default function Generator() {
             };
 
             // Call API to save the link
-            const response = await fetch('http://localhost:3000/api/links', {
+            const response = await fetch('/api/links', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

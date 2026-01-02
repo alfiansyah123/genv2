@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL } from '../config';
 import AddonDomainModal from '../components/AddonDomainModal';
 import { useTheme } from '../context/ThemeContext';
 
@@ -42,7 +43,7 @@ export default function AddonDomains() {
     const { isDark } = useTheme();
 
     const fetchDomains = () => {
-        fetch('http://localhost:3000/api/addon-domains')
+        fetch(`${API_URL}/api/addon-domains`)
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -60,7 +61,7 @@ export default function AddonDomains() {
     const handleDelete = async (id, dbId) => {
         if (window.confirm(`Are you sure you want to delete ${id}?`)) {
             try {
-                const response = await fetch(`http://localhost:3000/api/addon-domains/${dbId}`, {
+                const response = await fetch(`${API_URL}/api/addon-domains/${dbId}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {
@@ -79,7 +80,7 @@ export default function AddonDomains() {
         const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
 
         try {
-            const response = await fetch(`http://localhost:3000/api/addon-domains/${dbId}`, {
+            const response = await fetch(`${API_URL}/api/addon-domains/${dbId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
