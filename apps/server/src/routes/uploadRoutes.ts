@@ -6,9 +6,18 @@ import fs from 'fs';
 const router = Router();
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../../uploads');
+// Ensure uploads directory exists
+// On Vercel (read-only FS), use /tmp
+const uploadsDir = process.env.NODE_ENV === 'production'
+    ? path.join('/tmp', 'uploads')
+    : path.join(__dirname, '../../uploads');
+
 if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+    try {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    } catch (err) {
+        console.error('Failed to create upload dir:', err);
+    }
 }
 
 // Configure multer for file uploads
