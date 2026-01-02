@@ -4,6 +4,7 @@ import Toolbar from '../components/Toolbar';
 import TrackerTable from '../components/TrackerTable';
 import CreateTrackerModal from '../components/CreateTrackerModal';
 import { useTheme } from '../context/ThemeContext';
+import { API_URL } from '../config';
 
 export default function Dashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,7 +18,7 @@ export default function Dashboard() {
 
     const fetchTrackers = async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/trackers');
+            const response = await fetch(`${API_URL}/api/trackers`);
             if (response.ok) {
                 const data = await response.json();
                 setTrackers(data);
@@ -29,7 +30,7 @@ export default function Dashboard() {
 
     const handleDelete = async (id) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/trackers/${id}`, {
+            const response = await fetch(`${API_URL}/api/trackers/${id}`, {
                 method: 'DELETE'
             });
             if (response.ok) {

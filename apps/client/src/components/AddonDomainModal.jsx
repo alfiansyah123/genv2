@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 
 export default function AddonDomainModal({ isOpen, onClose, onSave }) {
     const [trackers, setTrackers] = useState([]);
@@ -9,7 +10,7 @@ export default function AddonDomainModal({ isOpen, onClose, onSave }) {
     // Fetch trackers from API
     useEffect(() => {
         if (isOpen) {
-            fetch('http://localhost:3000/api/trackers')
+            fetch(`${API_URL}/api/trackers`)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) {
@@ -36,7 +37,7 @@ export default function AddonDomainModal({ isOpen, onClose, onSave }) {
 
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:3000/api/addon-domains', {
+            const response = await fetch(`${API_URL}/api/addon-domains`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

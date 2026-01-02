@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Outlet } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { API_URL } from '../config';
 
 export default function TrackerAuthGuard() {
     const { trackerId } = useParams();
@@ -32,7 +33,7 @@ export default function TrackerAuthGuard() {
 
         // 2. Check Backend if we need password
         try {
-            const response = await fetch(`http://localhost:3000/api/trackers/slug/${trackerId}`);
+            const response = await fetch(`${API_URL}/api/trackers/slug/${trackerId}`);
             if (response.ok) {
                 const data = await response.json();
                 if (!data.hasPassword) {
@@ -60,7 +61,7 @@ export default function TrackerAuthGuard() {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:3000/api/trackers/verify-password', {
+            const response = await fetch(`${API_URL}/api/trackers/verify-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ slug: trackerId, password: passwordInput })
