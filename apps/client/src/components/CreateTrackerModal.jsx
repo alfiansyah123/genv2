@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API_URL from '../config';
+import { API_URL } from '../config';
 
 export default function CreateTrackerModal({ isOpen, onClose, trackerToEdit }) {
     if (!isOpen) return null;
