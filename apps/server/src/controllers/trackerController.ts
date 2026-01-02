@@ -26,7 +26,7 @@ export const createTracker = async (req: Request, res: Response) => {
                 team: team || 'USER',
                 password,
                 slug,
-                targetUrl: `http://localhost:5173/${slug}` // Auto-generate target URL for now
+                targetUrl: `${process.env.CLIENT_URL || 'http://localhost:5173'}/${slug}` // Auto-generate target URL
             },
         });
 
@@ -74,7 +74,7 @@ export const updateTracker = async (req: Request, res: Response) => {
                 // Only update slug/targetUrl if slug is provided
                 ...(slug && {
                     slug,
-                    targetUrl: `http://localhost:5173/${slug}`
+                    targetUrl: `${process.env.CLIENT_URL || 'http://localhost:5173'}/${slug}`
                 })
             }
         });
