@@ -12,8 +12,11 @@ export default function Generator() {
     const [campaigns, setCampaigns] = useState([]);
     const [selectedCampaign, setSelectedCampaign] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedDomain, setSelectedDomain] = useState('');
+    const [selectedDomain, setSelectedDomain] = useState('random');
     const [generatedUrl, setGeneratedUrl] = useState('');
+    const [branchKey, setBranchKey] = useState('');
+    const [branchEnabled, setBranchEnabled] = useState(false);
+    const [useLandingPage, setUseLandingPage] = useState(false);
 
     const [domains, setDomains] = useState([]);
 
@@ -98,12 +101,28 @@ export default function Generator() {
 
             resolvedTargetUrl = resolvedTargetUrl.replace('{sub_id}', trackerId);
 
+            // Resolve Domain (Handle Random)
+            let finalDomain = selectedDomain;
+            if (selectedDomain === 'random') {
+                const activeDomains = domains.filter(d => d.status === 'Active');
+                if (activeDomains.length > 0) {
+                    const randomIdx = Math.floor(Math.random() * activeDomains.length);
+                    finalDomain = activeDomains[randomIdx].title;
+                } else {
+                    alert('No active domains available for random selection.');
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
             const payload = {
                 slug: clickId,
                 targetUrl: resolvedTargetUrl,
-                domain: selectedDomain,
+                domain: finalDomain,
                 trackerId: trackerId,
-                network: selectedNetwork
+                network: selectedNetwork,
+                branchKey: branchEnabled && branchKey ? branchKey : null,
+                useLandingPage: useLandingPage
             };
 
             // Call API to save the link
@@ -119,9 +138,10 @@ export default function Generator() {
                 throw new Error('Failed to save link');
             }
 
-            // Construct Short Tracker Link for Display
-            const shortUrl = `https://${selectedDomain}/${clickId}`;
-            setGeneratedUrl(shortUrl);
+            const data = await response.json();
+
+            // Use the URL returned by backend (Branch link or Local link)
+            setGeneratedUrl(data.generatedUrl || `https://${finalDomain}/${clickId}`);
 
         } catch (error) {
             console.error('Error generating link:', error);
@@ -133,235 +153,230 @@ export default function Generator() {
 
     return (
         <div className={`font-display flex flex-col min-h-screen overflow-y-auto transition-colors ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
-            <header className={`sticky top-0 z-50 backdrop-blur-md border-b transition-colors ${isDark ? 'bg-[#15162e]/90 border-[#323367]' : 'bg-white/90 border-gray-200'}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16 relative">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                                <span className="material-symbols-outlined text-white text-[20px]">link</span>
-                            </div>
-                            <span className={`font-bold text-lg tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>CPA LinkGen</span>
-                        </div>
-                        <button onClick={toggleTheme} className={`transition-colors ${isDark ? 'text-[#9293c9] hover:text-white' : 'text-gray-500 hover:text-gray-900'}`} title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
-                            <span className="material-symbols-outlined">{isDark ? 'light_mode' : 'dark_mode'}</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
 
-            <div className="layout-container flex flex-col flex-1">
-                <GeneratorNavigation />
+            <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 pt-16">
+                <div className="w-full space-y-8">
 
+                    {/* Main Interaction Area */}
+                    <div className="space-y-8">
 
-                <div className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-5 max-w-7xl">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Main Generator Card */}
-                        <div className={`lg:col-span-2 rounded-3xl shadow-xl border p-8 transition-all hover:shadow-2xl ${isDark ? 'bg-[#1e1e2d] border-[#2d2d42] shadow-black/30 ring-1 ring-white/5' : 'bg-white border-gray-100 shadow-gray-200/50 ring-1 ring-gray-100'}`}>
+                        {/* Generator Hub Card */}
+                        <div className={`relative overflow-hidden rounded-[2rem] border transition-all duration-500 ${isDark
+                            ? 'bg-[#1e1e2d] border-[#2d2d42] shadow-2xl shadow-black/40'
+                            : 'bg-white border-gray-300 shadow-xl shadow-gray-200/50'
+                            }`}>
 
-                            {/* Header: Domain Config & User Badge */}
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                                <div>
-                                    <h2 className={`text-xs font-bold tracking-wider uppercase mb-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                                        Domain Configuration
-                                    </h2>
-                                </div>
-                                <div className="relative group">
-                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 rounded-xl blur opacity-60 group-hover:opacity-100 animate-pulse" style={{ animation: 'rgb-rotate 3s linear infinite' }}></div>
-                                    <div className={`relative flex items-center gap-2 px-4 py-2 rounded-xl border ${isDark ? 'bg-[#16172b] border-transparent text-slate-300' : 'bg-white border-transparent text-gray-700'}`}>
-                                        <span className="material-symbols-outlined text-[18px]">person</span>
-                                        <span className="font-medium text-sm">{trackerId}</span>
-                                    </div>
-                                </div>
-                            </div>
+                            {/* Ambient Background Glow */}
+                            {isDark && (
+                                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                            )}
 
-                            {/* Domain Selection Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                {/* Global Domain */}
-                                <div className="relative group">
-                                    <select
-                                        className={`w-full appearance-none rounded-xl border-none px-4 py-3.5 pr-10 text-sm font-medium transition-all cursor-pointer outline-none ${isDark
-                                            ? 'bg-[#16172b] text-white shadow-lg shadow-black/20 hover:bg-[#1a1b32]'
-                                            : 'bg-gray-50 text-gray-900 hover:bg-gray-100'
-                                            }`}
-                                        value={selectedDomain}
-                                        onChange={(e) => setSelectedDomain(e.target.value)}
-                                    >
-                                        <option value="">Select Domain...</option>
-                                        {domains
-                                            .map(domain => (
-                                                <option key={domain.dbId} value={domain.title}>
-                                                    {domain.title} {domain.status !== 'Active' ? `(${domain.status})` : ''} {domain.group !== 'Global Domain' ? `[${domain.group}]` : ''}
-                                                </option>
-                                            ))}
-                                    </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                        <span className="material-symbols-outlined text-[20px]">expand_more</span>
-                                    </div>
+                            <div className="p-8 md:p-10 relative">
+
+                                {/* Logo Banner */}
+                                <div className="mb-8 rounded-2xl overflow-hidden shadow-lg">
+                                    <img
+                                        src="/logo.png"
+                                        alt="Banner"
+                                        className="w-full h-auto object-cover"
+                                    />
                                 </div>
 
-                                {/* Custom Domain */}
-                                <div className="relative group">
-                                    <select className={`w-full appearance-none rounded-xl border-none px-4 py-3.5 pr-10 text-sm font-medium transition-all cursor-pointer outline-none ${isDark
-                                        ? 'bg-[#16172b] text-white shadow-lg shadow-black/20 hover:bg-[#1a1b32]'
-                                        : 'bg-gray-50 text-gray-900 hover:bg-gray-100'
+                                {/* Navigation & Tracker ID */}
+                                <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+                                    <GeneratorNavigation />
+
+                                    <div className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border ${isDark
+                                        ? 'bg-[#16172b] border-[#323367] text-indigo-300'
+                                        : 'bg-indigo-50 border-indigo-100 text-indigo-600'
                                         }`}>
-                                        <option>Select Custom Domain...</option>
-                                        <option>None</option>
-                                    </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                        <span className="material-symbols-outlined text-[20px]">expand_more</span>
+                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                        <span className="text-sm font-semibold tracking-wide uppercase">Tracker: {trackerId}</span>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Affiliate Network Selection */}
-                            <div className="mb-8 text-center">
-                                <h2 className={`text-xs font-bold tracking-wider uppercase mb-4 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                                    Affiliate Network
-                                </h2>
-                                <div className="flex flex-wrap gap-3 justify-center">
-                                    {['iMonetizeit', 'Lospollos', 'Clickdealer', 'Trafee'].map((network) => (
+                                {/* Section 2: Network Selection */}
+                                <div className="mb-10">
+                                    <label className={`block text-xs font-bold tracking-wider uppercase mb-4 pl-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>
+                                        Select Network
+                                    </label>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {['iMonetizeit', 'Lospollos', 'Clickdealer', 'Trafee'].map((network) => (
+                                            <button
+                                                key={network}
+                                                onClick={() => setSelectedNetwork(network)}
+                                                className={`group relative py-3 px-2 rounded-xl transition-all duration-300 overflow-hidden ${selectedNetwork === network
+                                                    ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-[#1e1e2d]'
+                                                    : 'hover:bg-gray-50 dark:hover:bg-[#25263a]'
+                                                    } ${isDark ? 'bg-[#15162e] border border-[#2d2d42]' : 'bg-gray-50 border border-transparent'}`}
+                                            >
+                                                {selectedNetwork === network && (
+                                                    <div className="absolute inset-0 bg-indigo-500/10 dark:bg-indigo-500/20"></div>
+                                                )}
+                                                <span className={`relative text-sm font-semibold transition-colors ${selectedNetwork === network
+                                                    ? 'text-indigo-600 dark:text-indigo-300'
+                                                    : isDark ? 'text-slate-400' : 'text-gray-600'
+                                                    }`}>
+                                                    {network}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Section 3: Configuration Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+
+                                    {/* Domain Select */}
+                                    <div className="space-y-3">
+                                        <label className={`text-xs font-bold tracking-wider uppercase pl-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>Domain</label>
+                                        <div className="relative group">
+                                            <select
+                                                className={`w-full appearance-none rounded-xl border px-5 py-4 pr-12 text-sm font-medium outline-none transition-all duration-300 cursor-pointer ${isDark
+                                                    ? 'bg-[#15162e] border-[#323367] text-white focus:border-indigo-500 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.1)]'
+                                                    : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-indigo-500 focus:bg-white focus:shadow-[0_0_0_4px_rgba(99,102,241,0.1)]'
+                                                    }`}
+                                                value={selectedDomain}
+                                                onChange={(e) => setSelectedDomain(e.target.value)}
+                                            >
+                                                <option value="">Select Domain...</option>
+                                                <option value="random">Random Domain</option>
+                                                {domains.map(domain => (
+                                                    <option key={domain.dbId} value={domain.title}>
+                                                        {domain.title} {domain.status !== 'Active' ? `(${domain.status})` : ''}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 group-focus-within:text-indigo-500 transition-colors">
+                                                <span className="material-symbols-outlined">expand_more</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Custom Domain Placeholder */}
+                                    <div className="space-y-3">
+                                        <label className={`text-xs font-bold tracking-wider uppercase pl-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>Custom Domain</label>
+                                        <div className="relative group opacity-60 hover:opacity-100 transition-opacity">
+                                            <select className={`w-full appearance-none rounded-xl border px-5 py-4 pr-12 text-sm font-medium outline-none transition-all duration-300 cursor-pointer ${isDark
+                                                ? 'bg-[#15162e] border-[#323367] text-white'
+                                                : 'bg-gray-50 border-gray-200 text-gray-900'
+                                                }`}>
+                                                <option>None</option>
+                                            </select>
+                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                                <span className="material-symbols-outlined">expand_more</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Section 4: Advanced Params */}
+                                <div className={`rounded-xl p-5 mb-10 transition-colors ${isDark ? 'bg-[#15162e]' : 'bg-gray-50'}`}>
+                                    <div className="flex items-center gap-2 mb-6">
+                                        <span className="material-symbols-outlined text-indigo-500 text-[20px]">tune</span>
+                                        <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Advanced Parameters</h3>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className={`block text-xs font-bold tracking-wider uppercase mb-2 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>Canonical URL</label>
+                                            <input
+                                                type="text"
+                                                placeholder="{canonical_URL}"
+                                                className={`w-full px-4 py-3 rounded-lg border-none text-sm font-medium transition-all ${isDark ? 'bg-[#1e1e2d] text-white placeholder-slate-600 focus:bg-[#25263a]' : 'bg-white text-gray-900 placeholder-gray-400 focus:ring-1 focus:ring-gray-200'
+                                                    }`}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={`block text-xs font-bold tracking-wider uppercase mb-2 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>Branch Key</label>
+                                            <input
+                                                type="text"
+                                                value={branchKey}
+                                                onChange={(e) => setBranchKey(e.target.value)}
+                                                placeholder="e.g. key_live_..."
+                                                className={`w-full px-4 py-3 rounded-lg border-none text-sm font-medium transition-all ${isDark ? 'bg-[#1e1e2d] text-white placeholder-slate-600 focus:bg-[#25263a]' : 'bg-white text-gray-900 placeholder-gray-400 focus:ring-1 focus:ring-gray-200'
+                                                    }`}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Action Bar - Form Style */}
+                                <div className={`flex flex-col md:flex-row items-stretch md:items-center gap-2 p-2 rounded-xl border ${isDark
+                                    ? 'bg-[#15162e] border-[#323367]'
+                                    : 'bg-gray-50 border-gray-200'
+                                    }`}>
+
+                                    {/* Link Input Group */}
+                                    <div className="flex items-center gap-2 flex-grow w-full md:w-auto">
+                                        <div className={`flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0 ${isDark ? 'bg-[#1e1e2d] text-indigo-400' : 'bg-white text-indigo-500'}`}>
+                                            <span className="material-symbols-outlined text-[20px]">link</span>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={generatedUrl}
+                                            readOnly
+                                            placeholder="{shorturl}"
+                                            onClick={() => generatedUrl && navigator.clipboard.writeText(generatedUrl)}
+                                            className={`w-full px-4 py-2.5 rounded-lg text-sm font-medium border-none outline-none cursor-pointer ${isDark
+                                                ? 'bg-transparent text-white placeholder-slate-500'
+                                                : 'bg-transparent text-gray-900 placeholder-gray-400'
+                                                } ${generatedUrl ? 'text-green-500' : ''}`}
+                                        />
+                                    </div>
+
+                                    {/* Action Group (Dropdowns + Button) */}
+                                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                                        {/* Branch Dropdown */}
+                                        <select
+                                            value={branchEnabled ? 'on' : 'off'}
+                                            onChange={(e) => setBranchEnabled(e.target.value === 'on')}
+                                            className={`w-full sm:w-auto px-3 py-2.5 rounded-lg text-sm font-medium border outline-none cursor-pointer ${isDark
+                                                ? 'bg-[#1e1e2d] border-[#323367] text-white'
+                                                : 'bg-white border-gray-200 text-gray-900'
+                                                }`}>
+                                            <option value="off">Branch OFF</option>
+                                            <option value="on">Branch ON</option>
+                                        </select>
+
+                                        {/* Landing Page Dropdown */}
+                                        <select
+                                            value={useLandingPage ? 'landing' : 'no-landing'}
+                                            onChange={(e) => setUseLandingPage(e.target.value === 'landing')}
+                                            className={`w-full sm:w-auto px-3 py-2.5 rounded-lg text-sm font-medium border outline-none cursor-pointer ${isDark
+                                                ? 'bg-[#1e1e2d] border-[#323367] text-white'
+                                                : 'bg-white border-gray-200 text-gray-900'
+                                                }`}>
+                                            <option value="no-landing">No Landing Page</option>
+                                            <option value="landing">Landing Page</option>
+                                        </select>
+
+                                        {/* Short URL Button */}
                                         <button
-                                            key={network}
-                                            onClick={() => setSelectedNetwork(network)}
-                                            className={`px-6 py-2.5 rounded-xl text-sm font-bold tracking-wide transition-all transform active:scale-95 ${selectedNetwork === network
-                                                ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                                                : isDark
-                                                    ? 'bg-[#16172b] text-slate-400 hover:bg-[#1a1b32] hover:text-white'
-                                                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                            onClick={handleGenerate}
+                                            disabled={isLoading}
+                                            className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-all whitespace-nowrap ${isLoading
+                                                ? 'opacity-70 cursor-not-allowed'
+                                                : 'hover:opacity-90'
+                                                } ${isDark
+                                                    ? 'bg-indigo-600 text-white'
+                                                    : 'bg-indigo-600 text-white'
                                                 }`}
                                         >
-                                            {network}
+                                            <span className="material-symbols-outlined text-[18px]">content_copy</span>
+                                            {isLoading ? 'Processing...' : 'Generate'}
                                         </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Canonical URL Input */}
-                            <div className="mb-8">
-                                <div className="flex justify-between items-center mb-2">
-                                    <h2 className={`text-xs font-bold tracking-wider uppercase ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                                        Canonical URL
-                                    </h2>
-                                    <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>The destination offer URL</span>
-                                </div>
-
-                                <div className={`flex items-center rounded-xl overflow-hidden transition-all focus-within:ring-2 focus-within:ring-primary ${isDark ? 'bg-[#16172b]' : 'bg-gray-50'
-                                    }`}>
-                                    <div className="pl-4 pr-3 text-slate-500">
-                                        <span className="material-symbols-outlined text-[20px]">link</span>
                                     </div>
-                                    <input
-                                        type="text"
-                                        placeholder="{canonical_URL}"
-                                        className={`w-full py-3.5 bg-transparent border-none outline-none text-sm font-medium ${isDark ? 'text-white placeholder-slate-600' : 'text-gray-900 placeholder-gray-400'
-                                            }`}
-                                    />
+
                                 </div>
                             </div>
 
-                            {/* Advanced Params Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                {/* Branch Key */}
-                                <div className="flex flex-col gap-2">
-                                    <h2 className={`text-xs font-bold tracking-wider uppercase ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                                        Branch Key
-                                    </h2>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. key_live_ka9..."
-                                        className={`w-full px-4 py-3 rounded-xl border-none outline-none text-sm transition-all focus:ring-2 focus:ring-primary ${isDark
-                                            ? 'bg-[#16172b] text-white placeholder-slate-600'
-                                            : 'bg-gray-50 text-gray-900 placeholder-gray-400'
-                                            }`}
-                                    />
-                                </div>
 
-                                {/* Branch Off */}
-                                <div className="flex flex-col gap-2">
-                                    <h2 className={`text-xs font-bold tracking-wider uppercase ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                                        Branch Off
-                                    </h2>
-                                    <div className="relative">
-                                        <select className={`w-full appearance-none rounded-xl border-none px-4 py-3 pr-10 text-sm font-medium transition-all cursor-pointer outline-none ${isDark
-                                            ? 'bg-[#16172b] text-white'
-                                            : 'bg-gray-50 text-gray-900'
-                                            }`}>
-                                            <option>Enabled</option>
-                                            <option>Disabled</option>
-                                        </select>
-                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                            <span className="material-symbols-outlined text-[20px]">expand_more</span>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                {/* Domain Shortener */}
-                                <div className="flex flex-col gap-2">
-                                    <h2 className={`text-xs font-bold tracking-wider uppercase ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                                        Domain Shortener
-                                    </h2>
-                                    <div className="relative">
-                                        <select className={`w-full appearance-none rounded-xl border-none px-4 py-3 pr-10 text-sm font-medium transition-all cursor-pointer outline-none ${isDark
-                                            ? 'bg-[#16172b] text-white'
-                                            : 'bg-gray-50 text-gray-900'
-                                            }`}>
-                                            <option>None (Direct)</option>
-                                            <option>Bit.ly</option>
-                                            <option>TinyURL</option>
-                                        </select>
-                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                            <span className="material-symbols-outlined text-[20px]">expand_more</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Generate Button */}
-                            <button
-                                onClick={handleGenerate}
-                                className="w-full py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-2xl shadow-xl shadow-primary/25 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.01] active:scale-[0.98]"
-                            >
-                                <span className="material-symbols-outlined">bolt</span>
-                                GENERATE URL
-                            </button>
-
-                            {/* Results */}
-                            <div className="mt-8">
-                                <h2 className={`text-xs font-bold tracking-wider uppercase mb-2 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>
-                                    Generated Short URL
-                                </h2>
-                                <div className={`h-16 rounded-xl border-2 border-dashed flex items-center justify-center relative group overflow-hidden ${isDark ? 'border-[#2d2d42] bg-[#16172b]/50' : 'border-gray-200 bg-gray-50'
-                                    }`}>
-                                    {generatedUrl ? (
-                                        <div className="flex items-center gap-3 w-full px-6">
-                                            <span className="material-symbols-outlined text-primary text-xl flex-shrink-0">link</span>
-                                            <span className={`text-sm font-mono truncate flex-grow ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                {generatedUrl}
-                                            </span>
-                                            <button
-                                                onClick={() => navigator.clipboard.writeText(generatedUrl)}
-                                                className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                                title="Copy to clipboard"
-                                            >
-                                                <span className="material-symbols-outlined text-[20px]">content_copy</span>
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <span className="material-symbols-outlined text-3xl text-primary/50">qr_code_2</span>
-                                    )}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        {/* Right Siderbar for Live Traffic */}
-                        <div className="flex flex-col gap-6">
-                            <LiveTraffic />
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     );
 }

@@ -1,8 +1,16 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Header() {
     const { isDark, toggleTheme } = useTheme();
+    const { logout, user } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
     return (
         <header className={`w-full border-b border-solid px-6 py-4 sticky top-0 z-50 ${isDark ? 'bg-[#111122] border-[#232448]' : 'bg-white border-gray-200 shadow-sm'}`}>
             <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-4">
@@ -41,14 +49,10 @@ export default function Header() {
                         <button onClick={toggleTheme} className={`transition-colors ${isDark ? 'text-[#9293c9] hover:text-white' : 'text-gray-500 hover:text-gray-900'}`} title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
                             <span className="material-symbols-outlined">{isDark ? 'light_mode' : 'dark_mode'}</span>
                         </button>
-                        <button className={`transition-colors ${isDark ? 'text-[#9293c9] hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
-                            <span className="material-symbols-outlined">notifications</span>
-                        </button>
-                        <button className={`transition-colors ${isDark ? 'text-[#9293c9] hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
-                            <span className="material-symbols-outlined">settings</span>
+                        <button onClick={handleLogout} className={`transition-colors ${isDark ? 'text-[#9293c9] hover:text-red-500' : 'text-gray-500 hover:text-red-600'}`} title="Logout">
+                            <span className="material-symbols-outlined">logout</span>
                         </button>
                     </div>
-                    <div className={`bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 ${isDark ? 'border-[#232448]' : 'border-gray-200'}`} style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuA4qhuIy3Al9_Wom361z7Qkhlh68DnbCgSCX7T0n3M1xMNddh3D3HWyP3C8AvQ-36OC6UKHseWh_EuGh-34V4EIZSTJPfPSnNnVSxQ_43QcEAK9vXOX3g4dlebQSj9ttpE_KEByUWkRzyRE18u6R51CtvA-BAUQ9VO6OVRvZReBvHQzoUWxpseccCRLVJ-L5w-ihlni4FotwlqJC6tq-5tyWAIO718SoKjUTaU1wjyla8t4b-5NRz170HZVI2kd_vwJyF24ViouM2s")' }}></div>
                 </div>
             </div>
         </header>

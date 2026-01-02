@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_URL from '../config';
 
 export default function CreateTrackerModal({ isOpen, onClose, trackerToEdit }) {
     if (!isOpen) return null;
@@ -31,8 +32,8 @@ export default function CreateTrackerModal({ isOpen, onClose, trackerToEdit }) {
         }
 
         const url = trackerToEdit
-            ? `http://localhost:3000/api/trackers/${trackerToEdit.id}`
-            : 'http://localhost:3000/api/trackers';
+            ? `${API_URL}/api/trackers/${trackerToEdit.id}`
+            : `${API_URL}/api/trackers`;
 
         const method = trackerToEdit ? 'PUT' : 'POST';
 
@@ -140,7 +141,7 @@ export default function CreateTrackerModal({ isOpen, onClose, trackerToEdit }) {
                                 id="url"
                                 type="text"
                                 readOnly
-                                value={`http://localhost:5173/${name.trim().replace(/\s+/g, '-')}`}
+                                value={`${window.location.origin}/${name.trim().replace(/\s+/g, '-')}`}
                             />
                             <div className="flex items-center justify-center px-4 text-slate-500">
                                 <span className="material-symbols-outlined text-[20px]">lock</span>

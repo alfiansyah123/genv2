@@ -9,8 +9,18 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String   // Will be hashed
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("admins")
 }
 
 model Domain {
@@ -19,8 +29,10 @@ model Domain {
   subdomain String?
   status    String   @default("Pending")
   ssl       String   @default("Pending")
-  addedAt   DateTime @default(now())
+  addedAt   DateTime @default(now()) @map("added_at")
   trackers  Tracker[]
+
+  @@map("domains")
 }
 
 model Tracker {
@@ -29,59 +41,70 @@ model Tracker {
   slug      String   @unique
   team      String
   password  String?
-  targetUrl String
-  domainId  Int?
+  targetUrl String   @map("target_url")
+  domainId  Int?     @map("domain_id")
   domain    Domain?  @relation(fields: [domainId], references: [id])
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("trackers")
 }
 
 model Campaign {
   id              Int      @id @default(autoincrement())
   network         String
-  urlTemplate     String   @db.Text
-  postbackEndpoint String  @db.Text
-  offerName       String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  urlTemplate     String   @db.Text @map("url_template")
+  postbackEndpoint String  @db.Text @map("postback_endpoint")
+  offerName       String   @map("offer_name")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("campaigns")
 }
 
 model Link {
-  id          Int          @id @default(autoincrement())
-  slug        String       @unique
-  targetUrl   String       @db.Text
-  domain      String
-  trackerId   String
-  network     String?
-  ogImage     String?      @db.Text
-  ogTitle     String?
-  ogDescription String?    @db.Text
-  clickCount  Int          @default(0)
-  clicks      Click[]
-  conversions Conversion[]
-  createdAt   DateTime     @default(now())
+  id            Int          @id @default(autoincrement())
+  slug          String       @unique
+  targetUrl     String       @db.Text @map("target_url")
+  domain        String
+  trackerId     String       @map("tracker_id")
+  network       String?
+  useLandingPage Boolean     @default(false) @map("use_landing_page")
+  ogImage       String?      @db.Text @map("og_image")
+  ogTitle       String?      @map("og_title")
+  ogDescription String?      @db.Text @map("og_description")
+  clickCount    Int          @default(0) @map("click_count")
+  clicks        Click[]
+  conversions   Conversion[]
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  @@map("links")
 }
 
 model Click {
   id        Int      @id @default(autoincrement())
-  linkId    Int
+  linkId    Int      @map("link_id")
   link      Link     @relation(fields: [linkId], references: [id])
   ip        String
   country   String
-  userAgent String   @db.Text
-  createdAt DateTime @default(now())
+  userAgent String   @db.Text @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@index([linkId])
   @@index([createdAt])
+
+  @@map("clicks")
 }
 
 model Conversion {
   id        Int      @id @default(autoincrement())
-  linkId    Int
+  linkId    Int      @map("link_id")
   link      Link     @relation(fields: [linkId], references: [id])
-  clickId   String
+  clickId   String   @map("click_id")
   payout    Float    @default(0.0)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@index([linkId])
   @@index([createdAt])
+
+  @@map("conversions")
 }

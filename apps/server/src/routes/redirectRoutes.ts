@@ -73,6 +73,114 @@ router.get('/_meetups/r.php', (req, res) => {
     }
 });
 
+// GET /_video/landing - Video Landing Page with auto-redirect
+router.get('/_video/landing', (req, res) => {
+    try {
+        const { dest } = req.query;
+        if (!dest) return res.send('Missing destination');
+
+        // Decode the real target URL
+        const finalDest = Buffer.from(dest as string, 'base64').toString('ascii');
+
+        // Random video selection (video1.mp4 or video2.mp4)
+        const videoNum = Math.random() < 0.5 ? 1 : 2;
+        const videoPath = `/videos/video${videoNum}.mp4`;
+
+        // Video landing page HTML - auto redirect after 3 seconds OR on click
+        const html = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Loading...</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { 
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: center; 
+                        min-height: 100vh; 
+                        background: #000;
+                        cursor: pointer;
+                    }
+                    .video-container {
+                        position: relative;
+                        width: 100%;
+                        max-width: 800px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    }
+                    video {
+                        width: 100%;
+                        height: auto;
+                        max-height: 100vh;
+                        object-fit: contain;
+                    }
+                    .overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        z-index: 10;
+                        cursor: pointer;
+                    }
+                    .timer {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: rgba(0,0,0,0.7);
+                        color: #fff;
+                        padding: 10px 20px;
+                        border-radius: 8px;
+                        font-family: sans-serif;
+                        font-size: 14px;
+                        z-index: 20;
+                        display: none; /* Hidden as per request */
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="timer" id="timer">Redirecting in 3...</div>
+                <div class="overlay" onclick="redirect()"></div>
+                <div class="video-container">
+                    <video autoplay muted loop playsinline>
+                        <source src="${videoPath}" type="video/mp4">
+                    </video>
+                </div>
+                <script>
+                    let countdown = 3;
+                    const timerEl = document.getElementById('timer');
+                    const targetUrl = "${finalDest}";
+                    
+                    const interval = setInterval(() => {
+                        countdown--;
+                        if (countdown <= 0) {
+                            clearInterval(interval);
+                            redirect();
+                        } else {
+                            timerEl.textContent = 'Redirecting in ' + countdown + '...';
+                        }
+                    }, 1000);
+                    
+                    function redirect() {
+                        clearInterval(interval);
+                        window.location.href = targetUrl;
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+
+        res.send(html);
+    } catch (error) {
+        console.error('Video Landing Error:', error);
+        res.status(500).send('Error');
+    }
+});
+
 // GET /:slug - Handle Redirect
 router.get('/:slug', async (req, res) => {
     try {
@@ -193,14 +301,27 @@ router.get('/:slug', async (req, res) => {
             finalUrl += `${separator}click_id=${finalClickId}`;
         }
 
-        // --- INTERMEDIATE REDIRECT FOR NON-ID ---
-        // Construct the visual URL params user requested
-        const encodedDest = Buffer.from(finalUrl).toString('base64');
-        const visualUrl = `/_meetups/r.php?click_id=${link.trackerId}&country_code=${country.toLowerCase()}&user_agent=web&ip_address=${clientIp}&user_lp=${network.toLowerCase()}&dest=${encodedDest}`;
+        // --- INTERMEDIATE REDIRECT ---
+        // Determine the immediate destination (Video Page or Final Offer)
+        let immediateDest = finalUrl;
+
+        if (link.useLandingPage) {
+            // If Landing Page enabled: r.php -> Video Page -> Final Offer
+            // We need to encode the Final Offer for the Video Page
+            const encodedFinalForVideo = Buffer.from(finalUrl).toString('base64');
+            // The immediate destination for r.php is the Video Page
+            immediateDest = `/_video/landing?dest=${encodedFinalForVideo}`;
+        }
+
+        // Encode the immediate destination for r.php
+        const encodedDest = Buffer.from(immediateDest).toString('base64');
+
+        // Always redirect via intermediate page r.php
+        const redirectUrl = `/_meetups/r.php?click_id=${link.trackerId}&country_code=${country.toLowerCase()}&user_agent=web&ip_address=${clientIp}&user_lp=${network.toLowerCase()}&dest=${encodedDest}`;
 
         // Anti-Spam / Stealth Header: Hide Referrer
         res.set('Referrer-Policy', 'no-referrer');
-        res.redirect(visualUrl);
+        res.redirect(redirectUrl);
         // ---------------------------------------
 
     } catch (error) {
