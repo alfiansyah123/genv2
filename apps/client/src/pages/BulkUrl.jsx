@@ -26,7 +26,7 @@ export default function BulkUrl() {
         const fetchData = async () => {
             try {
                 // Fetch Domains
-                const domainsRes = await fetch('/api/addon-domains');
+                const domainsRes = await fetch(`${API_URL}/api/addon-domains`);
                 if (domainsRes.ok) {
                     const data = await domainsRes.json();
                     if (Array.isArray(data)) {
@@ -40,7 +40,7 @@ export default function BulkUrl() {
                 }
 
                 // Fetch Campaigns (for dynamic network list)
-                const campaignsRes = await fetch('/api/campaigns');
+                const campaignsRes = await fetch(`${API_URL}/api/campaigns`);
                 if (campaignsRes.ok) {
                     const data = await campaignsRes.json();
                     setCampaigns(data);
@@ -157,7 +157,7 @@ export default function BulkUrl() {
                     network: selectedNetwork
                 };
 
-                const response = await fetch('/api/links', {
+                const response = await fetch(`${API_URL}/api/links`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
